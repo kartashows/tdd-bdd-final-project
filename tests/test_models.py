@@ -185,11 +185,33 @@ class TestProductModel(unittest.TestCase):
         for product in found:
             self.assertEqual(product.category, category)
 
-    def test_update_with_id(self):
-        """Test update with id not None"""
+    def test_find_by_price(self):
+        """It should find by price"""
+        products = ProductFactory.create_batch(5)
+        for product in products:
+            product.create()
+        price = products[0].price
+        count = len([product for product in products if product.price == price])
+        found = Product.find_by_price(price)
+        self.assertEqual(found.count(), count)
+        for product in found:
+            self.assertEqual(product.price, price)
+
+    def test_find_by_price_string(self):
+        """test find by price string"""
         product = ProductFactory()
-        desc = 'random desc'
-        product.description = desc
+        price_str = "  10.50 "
+        product.price = 10.50
+        product.create()
+        found = Product.find_by_price(price_str)
+        self.assertEqual(found.count(), 1)
+        self.assertEqual(found[0].price, 10.50)
+
+    def test_raise_on_update(self):
+        """Test raise when id is not empty for update"""
+        product = ProductFactory()
+        product.create()
+        product.id = None
         with self.assertRaises(DataValidationError) as cm:
             product.update()
         self.assertEqual(str(cm.exception), "Update called with empty ID field")
